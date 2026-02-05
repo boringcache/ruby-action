@@ -39,6 +39,7 @@ const os = __importStar(require("os"));
 const utils_1 = require("./utils");
 async function run() {
     try {
+        const cliVersion = core.getInput('cli-version') || 'v1.0.0';
         const inputs = {
             workspace: core.getInput('workspace'),
             rubyVersion: core.getInput('ruby-version'),
@@ -49,7 +50,7 @@ async function run() {
             exclude: core.getInput('exclude'),
         };
         // Setup BoringCache CLI
-        await (0, utils_1.setupBoringCache)();
+        await (0, utils_1.ensureBoringCache)({ version: cliVersion });
         // Get workspace
         const workspace = (0, utils_1.getWorkspace)(inputs.workspace);
         core.setOutput('workspace', workspace);

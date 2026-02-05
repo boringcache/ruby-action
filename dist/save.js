@@ -38,6 +38,7 @@ const utils_1 = require("./utils");
 async function run() {
     try {
         // Get state from restore phase
+        const cliVersion = core.getInput('cli-version') || 'v1.0.0';
         const workspace = core.getState('workspace');
         const rubyKey = core.getState('ruby-key');
         const bundleKey = core.getState('bundle-key');
@@ -51,7 +52,7 @@ async function run() {
             return;
         }
         // Ensure CLI is available
-        await (0, utils_1.setupBoringCache)();
+        await (0, utils_1.ensureBoringCache)({ version: cliVersion });
         // Save Ruby cache (if not already cached)
         if (cacheRuby && !rubyCacheHit && await (0, utils_1.pathExists)(miseDir)) {
             const args = ['save', workspace, `${rubyKey}:${miseDir}`];

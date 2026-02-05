@@ -3,56 +3,14 @@ import * as exec from '@actions/exec';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import { ensureBoringCache, execBoringCache as execBoringCacheCore } from '@boringcache/action-core';
 
-export async function setupBoringCache(): Promise<void> {
-  const token = process.env.BORINGCACHE_API_TOKEN;
-
-  // Install CLI
-  await exec.exec('sh', ['-c', 'curl -sSL https://install.boringcache.com/install.sh | sh']);
-
-  // Add to PATH
-  const homedir = os.homedir();
-  core.addPath(`${homedir}/.local/bin`);
-  core.addPath(`${homedir}/.boringcache/bin`);
-
-  // Authenticate if token provided
-  if (token) {
-    try {
-      await execBoringCache(['auth', '--token', token]);
-    } catch {
-      core.warning('Authentication failed');
-    }
-  } else {
-    core.warning('BORINGCACHE_API_TOKEN not set, caching will not work');
-  }
-}
+export { ensureBoringCache };
 
 export async function execBoringCache(args: string[], options: { ignoreReturnCode?: boolean } = {}): Promise<number> {
-  const homedir = os.homedir();
-  const paths = [
-    `${homedir}/.local/bin/boringcache`,
-    `${homedir}/.boringcache/bin/boringcache`,
-    'boringcache'
-  ];
-
-  let boringcachePath = 'boringcache';
-  for (const p of paths) {
-    try {
-      await fs.promises.access(p, fs.constants.X_OK);
-      boringcachePath = p;
-      break;
-    } catch {
-      continue;
-    }
-  }
-
-  const exitCode = await core.group('Run Boringcache', async () => {
-    return await exec.exec(boringcachePath, args, {
-      ignoreReturnCode: options.ignoreReturnCode ?? false
-    });
+  return await execBoringCacheCore(args, {
+    ignoreReturnCode: options.ignoreReturnCode ?? false
   });
-
-  return exitCode;
 }
 
 export function getWorkspace(inputWorkspace: string): string {

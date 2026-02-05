@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.setupBoringCache = setupBoringCache;
+exports.ensureBoringCache = void 0;
 exports.execBoringCache = execBoringCache;
 exports.getWorkspace = getWorkspace;
 exports.getRubyVersion = getRubyVersion;
@@ -47,52 +47,13 @@ const exec = __importStar(require("@actions/exec"));
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 const os = __importStar(require("os"));
-async function setupBoringCache() {
-    const token = process.env.BORINGCACHE_API_TOKEN;
-    // Install CLI
-    await exec.exec('sh', ['-c', 'curl -sSL https://install.boringcache.com/install.sh | sh']);
-    // Add to PATH
-    const homedir = os.homedir();
-    core.addPath(`${homedir}/.local/bin`);
-    core.addPath(`${homedir}/.boringcache/bin`);
-    // Authenticate if token provided
-    if (token) {
-        try {
-            await execBoringCache(['auth', '--token', token]);
-        }
-        catch {
-            core.warning('Authentication failed');
-        }
-    }
-    else {
-        core.warning('BORINGCACHE_API_TOKEN not set, caching will not work');
-    }
-}
+const action_core_1 = require("@boringcache/action-core");
+Object.defineProperty(exports, "ensureBoringCache", { enumerable: true, get: function () { return action_core_1.ensureBoringCache; } });
 async function execBoringCache(args, options = {}) {
-    const homedir = os.homedir();
-    const paths = [
-        `${homedir}/.local/bin/boringcache`,
-        `${homedir}/.boringcache/bin/boringcache`,
-        'boringcache'
-    ];
-    let boringcachePath = 'boringcache';
-    for (const p of paths) {
-        try {
-            await fs.promises.access(p, fs.constants.X_OK);
-            boringcachePath = p;
-            break;
-        }
-        catch {
-            continue;
-        }
-    }
-    const exitCode = await core.group('Run Boringcache', async () => {
-        var _a;
-        return await exec.exec(boringcachePath, args, {
-            ignoreReturnCode: (_a = options.ignoreReturnCode) !== null && _a !== void 0 ? _a : false
-        });
+    var _a;
+    return await (0, action_core_1.execBoringCache)(args, {
+        ignoreReturnCode: (_a = options.ignoreReturnCode) !== null && _a !== void 0 ? _a : false
     });
-    return exitCode;
 }
 function getWorkspace(inputWorkspace) {
     let workspace = inputWorkspace || process.env.BORINGCACHE_DEFAULT_WORKSPACE || '';

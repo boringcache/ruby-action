@@ -3,6 +3,10 @@ description: 'Cache once. Reuse everywhere. Setup Ruby via mise and cache Ruby +
 author: 'BoringCache'
 
 inputs:
+  cli-version:
+    description: 'BoringCache CLI version to use'
+    required: false
+    default: 'v1.0.0'
   ruby-version:
     description: 'Ruby version to install via mise. Defaults to .ruby-version file if present.'
     required: false

@@ -2,7 +2,7 @@ import * as core from '@actions/core';
 import * as path from 'path';
 import * as os from 'os';
 import {
-  setupBoringCache,
+  ensureBoringCache,
   execBoringCache,
   getWorkspace,
   getRubyVersion,
@@ -14,6 +14,7 @@ import {
 
 async function run(): Promise<void> {
   try {
+    const cliVersion = core.getInput('cli-version') || 'v1.0.0';
     const inputs = {
       workspace: core.getInput('workspace'),
       rubyVersion: core.getInput('ruby-version'),
@@ -25,7 +26,7 @@ async function run(): Promise<void> {
     };
 
     // Setup BoringCache CLI
-    await setupBoringCache();
+    await ensureBoringCache({ version: cliVersion });
 
     // Get workspace
     const workspace = getWorkspace(inputs.workspace);

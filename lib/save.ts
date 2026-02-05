@@ -1,9 +1,10 @@
 import * as core from '@actions/core';
-import { execBoringCache, pathExists, setupBoringCache } from './utils';
+import { execBoringCache, pathExists, ensureBoringCache } from './utils';
 
 async function run(): Promise<void> {
   try {
     // Get state from restore phase
+    const cliVersion = core.getInput('cli-version') || 'v1.0.0';
     const workspace = core.getState('workspace');
     const rubyKey = core.getState('ruby-key');
     const bundleKey = core.getState('bundle-key');
@@ -19,7 +20,7 @@ async function run(): Promise<void> {
     }
 
     // Ensure CLI is available
-    await setupBoringCache();
+    await ensureBoringCache({ version: cliVersion });
 
     // Save Ruby cache (if not already cached)
     if (cacheRuby && !rubyCacheHit && await pathExists(miseDir)) {
