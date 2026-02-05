@@ -29,6 +29,20 @@ export function getWorkspace(inputWorkspace: string): string {
   return workspace;
 }
 
+export function getCacheTagPrefix(inputCacheTag: string): string {
+  if (inputCacheTag) {
+    return inputCacheTag;
+  }
+
+  const repo = process.env.GITHUB_REPOSITORY || '';
+  if (repo) {
+    const repoName = repo.split('/')[1] || repo;
+    return repoName;
+  }
+
+  return 'ruby';
+}
+
 export async function getRubyVersion(inputVersion: string, workingDir: string): Promise<string> {
   if (inputVersion) {
     return inputVersion;

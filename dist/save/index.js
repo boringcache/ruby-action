@@ -45387,6 +45387,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ensureBoringCache = void 0;
 exports.execBoringCache = execBoringCache;
 exports.getWorkspace = getWorkspace;
+exports.getCacheTagPrefix = getCacheTagPrefix;
 exports.getRubyVersion = getRubyVersion;
 exports.getFileHash = getFileHash;
 exports.installMise = installMise;
@@ -45417,6 +45418,17 @@ function getWorkspace(inputWorkspace) {
         workspace = `default/${workspace}`;
     }
     return workspace;
+}
+function getCacheTagPrefix(inputCacheTag) {
+    if (inputCacheTag) {
+        return inputCacheTag;
+    }
+    const repo = process.env.GITHUB_REPOSITORY || '';
+    if (repo) {
+        const repoName = repo.split('/')[1] || repo;
+        return repoName;
+    }
+    return 'ruby';
 }
 async function getRubyVersion(inputVersion, workingDir) {
     if (inputVersion) {
