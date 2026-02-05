@@ -45317,24 +45317,44 @@ async function run() {
         const rubyCacheHit = core.getState('ruby-cache-hit') === 'true';
         const bundleCacheHit = core.getState('bundle-cache-hit') === 'true';
         const exclude = core.getState('exclude');
+        core.info('BoringCache Ruby - Post job save');
+        core.debug(`State: workspace=${workspace}, rubyTag=${rubyTag}, bundleTag=${bundleTag}`);
+        core.debug(`State: miseDir=${miseDir}, bundleDir=${bundleDir}`);
+        core.debug(`State: cacheRuby=${cacheRuby}, rubyCacheHit=${rubyCacheHit}, bundleCacheHit=${bundleCacheHit}`);
         if (!workspace) {
+            core.info('No workspace found in state, skipping cache save');
             return;
         }
         // Ensure CLI is available
         await (0, utils_1.ensureBoringCache)({ version: cliVersion });
         // Save Ruby cache (if not already cached)
         if (cacheRuby && !rubyCacheHit && await (0, utils_1.pathExists)(miseDir)) {
+            core.info(`Saving Ruby cache: ${miseDir} -> ${rubyTag}`);
             const args = ['save', workspace, `${miseDir}:${rubyTag}`];
             await (0, utils_1.execBoringCache)(args, { ignoreReturnCode: true });
         }
+        else if (cacheRuby && rubyCacheHit) {
+            core.info('Ruby cache already exists, skipping save');
+        }
+        else if (!cacheRuby) {
+            core.info('Ruby caching disabled');
+        }
         // Save bundle cache (if not already cached)
         if (!bundleCacheHit && await (0, utils_1.pathExists)(bundleDir)) {
+            core.info(`Saving bundle cache: ${bundleDir} -> ${bundleTag}`);
             const args = ['save', workspace, `${bundleDir}:${bundleTag}`];
             if (exclude) {
                 args.push('--exclude', exclude);
             }
             await (0, utils_1.execBoringCache)(args, { ignoreReturnCode: true });
         }
+        else if (bundleCacheHit) {
+            core.info('Bundle cache already exists, skipping save');
+        }
+        else {
+            core.info(`Bundle dir not found: ${bundleDir}`);
+        }
+        core.info('Cache save complete');
     }
     catch (error) {
         core.warning(`Cache save failed: ${error instanceof Error ? error.message : String(error)}`);
