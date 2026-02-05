@@ -45422,9 +45422,19 @@ const action_core_1 = __nccwpck_require__(68701);
 Object.defineProperty(exports, "ensureBoringCache", ({ enumerable: true, get: function () { return action_core_1.ensureBoringCache; } }));
 async function execBoringCache(args, options = {}) {
     var _a;
-    return await (0, action_core_1.execBoringCache)(args, {
-        ignoreReturnCode: (_a = options.ignoreReturnCode) !== null && _a !== void 0 ? _a : false
+    const code = await (0, action_core_1.execBoringCache)(args, {
+        ignoreReturnCode: (_a = options.ignoreReturnCode) !== null && _a !== void 0 ? _a : false,
+        silent: true,
+        listeners: {
+            stdout: (data) => {
+                process.stdout.write(data.toString());
+            },
+            stderr: (data) => {
+                process.stderr.write(data.toString());
+            }
+        }
     });
+    return code;
 }
 function getWorkspace(inputWorkspace) {
     let workspace = inputWorkspace || process.env.BORINGCACHE_DEFAULT_WORKSPACE || '';
