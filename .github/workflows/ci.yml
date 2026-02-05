@@ -1,0 +1,123 @@
+name: Ruby Action CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "action.yml"
+      - "lib/**"
+      - "dist/**"
+      - ".github/workflows/**"
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  BORINGCACHE_API_TOKEN: ${{ secrets.BORINGCACHE_API_TOKEN }}
+
+jobs:
+  test-ruby-setup:
+    name: Test Ruby Setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create test app
+        run: |
+          mkdir -p test-app
+          echo "3.3.0" > test-app/.ruby-version
+          cat > test-app/Gemfile << 'EOF'
+          source 'https://rubygems.org'
+          gem 'rake'
+          gem 'minitest'
+          EOF
+
+      - name: Setup Ruby with boringcache
+        id: ruby
+        uses: ./
+        with:
+          workspace: boringcache/ruby-action-test
+          working-directory: test-app
+
+      - name: Verify Ruby version
+        run: |
+          echo "Installed Ruby: ${{ steps.ruby.outputs.ruby-version }}"
+          ruby --version
+
+      - name: Verify outputs
+        run: |
+          echo "cache-hit: ${{ steps.ruby.outputs.cache-hit }}"
+          echo "ruby-cache-hit: ${{ steps.ruby.outputs.ruby-cache-hit }}"
+          echo "cache-key: ${{ steps.ruby.outputs.cache-key }}"
+          echo "workspace: ${{ steps.ruby.outputs.workspace }}"
+
+  test-bundle-install:
+    name: Test Bundle Install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create test app
+        run: |
+          mkdir -p test-app
+          echo "3.3.0" > test-app/.ruby-version
+          cat > test-app/Gemfile << 'EOF'
+          source 'https://rubygems.org'
+          gem 'rake'
+          gem 'minitest'
+          gem 'json'
+          EOF
+
+      - name: Setup Ruby
+        id: ruby
+        uses: ./
+        with:
+          workspace: boringcache/ruby-action-test
+          working-directory: test-app
+
+      - name: Bundle install
+        working-directory: test-app
+        run: |
+          bundle config set --local path vendor/bundle
+          bundle install --jobs 4
+
+      - name: Verify gems installed
+        working-directory: test-app
+        run: bundle list | grep rake
+
+      # Cache is automatically saved at job end
+
+  test-custom-ruby-version:
+    name: Test Custom Ruby Version
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ruby: ['3.2.0', '3.3.0']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create test app
+        run: |
+          mkdir -p test-app
+          cat > test-app/Gemfile << 'EOF'
+          source 'https://rubygems.org'
+          gem 'rake'
+          EOF
+
+      - name: Setup with Ruby ${{ matrix.ruby }}
+        id: ruby
+        uses: ./
+        with:
+          workspace: boringcache/ruby-action-test
+          working-directory: test-app
+          ruby-version: ${{ matrix.ruby }}
+
+      - name: Verify Ruby version
+        run: |
+          INSTALLED=$(ruby --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+          EXPECTED="${{ matrix.ruby }}"
+          echo "Installed: $INSTALLED, Expected: $EXPECTED"
+          if [[ "$INSTALLED" != "$EXPECTED" ]]; then
+            echo "Ruby version mismatch!"
+            exit 1
+          fi

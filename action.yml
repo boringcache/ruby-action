@@ -1,0 +1,60 @@
+name: 'BoringCache Ruby'
+description: 'Cache once. Reuse everywhere. Setup Ruby via mise and cache Ruby + gems with BoringCache.'
+author: 'BoringCache'
+
+inputs:
+  ruby-version:
+    description: 'Ruby version to install via mise. Defaults to .ruby-version file if present.'
+    required: false
+    default: ''
+  working-directory:
+    description: 'Working directory. Defaults to repository root.'
+    required: false
+    default: '.'
+  workspace:
+    description: 'BoringCache workspace identifier (e.g., my-org/my-project). Required.'
+    required: false
+  cache-key-prefix:
+    description: 'Prefix for cache keys. Useful for cache invalidation.'
+    required: false
+    default: 'ruby'
+  bundle-path:
+    description: 'Path where gems are installed'
+    required: false
+    default: 'vendor/bundle'
+  cache-ruby:
+    description: 'Cache Ruby installation from mise'
+    required: false
+    default: 'true'
+  exclude:
+    description: 'Glob patterns to exclude from bundle cache (e.g., "*.out,*.log")'
+    required: false
+    default: '*.out'
+  save-always:
+    description: 'Save cache even if job fails'
+    required: false
+    default: 'false'
+
+outputs:
+  ruby-version:
+    description: 'Installed Ruby version'
+  cache-hit:
+    description: 'Whether the bundle cache was restored'
+  ruby-cache-hit:
+    description: 'Whether the Ruby cache was restored'
+  cache-key:
+    description: 'Cache key used for bundle'
+  ruby-key:
+    description: 'Cache key used for Ruby'
+  workspace:
+    description: 'Resolved workspace name'
+
+runs:
+  using: 'node24'
+  main: 'dist/restore/index.js'
+  post: 'dist/save/index.js'
+  post-if: "success() || inputs.save-always == 'true'"
+
+branding:
+  icon: 'box'
+  color: 'blue'
