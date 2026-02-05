@@ -6,7 +6,6 @@ import {
   execBoringCache,
   getWorkspace,
   getRubyVersion,
-  getFileHash,
   installMise,
   installRuby,
   activateRuby,
@@ -19,7 +18,7 @@ async function run(): Promise<void> {
       workspace: core.getInput('workspace'),
       rubyVersion: core.getInput('ruby-version'),
       workingDirectory: core.getInput('working-directory') || '.',
-      cacheKeyPrefix: core.getInput('cache-key-prefix') || 'ruby',
+      cacheTagPrefix: core.getInput('cache-tag-prefix') || 'ruby',
       bundlePath: core.getInput('bundle-path') || 'vendor/bundle',
       cacheRuby: core.getBooleanInput('cache-ruby'),
       exclude: core.getInput('exclude'),
@@ -37,19 +36,12 @@ async function run(): Promise<void> {
     const rubyVersion = await getRubyVersion(inputs.rubyVersion, workingDir);
     core.setOutput('ruby-version', rubyVersion);
 
-    // Generate cache keys
-    const gemfileLockPath = path.join(workingDir, 'Gemfile.lock');
-    const gemfilePath = path.join(workingDir, 'Gemfile');
-    let gemfileHash = await getFileHash(gemfileLockPath);
-    if (!gemfileHash) {
-      gemfileHash = await getFileHash(gemfilePath);
-    }
+    // Generate cache tags (content-addressing handled by CLI)
+    const rubyTag = `${inputs.cacheTagPrefix}-ruby-${rubyVersion}`;
+    const bundleTag = `${inputs.cacheTagPrefix}-bundle-${rubyVersion}`;
 
-    const rubyKey = `${inputs.cacheKeyPrefix}-ruby-${rubyVersion}`;
-    const bundleKey = `${inputs.cacheKeyPrefix}-bundle-${rubyVersion}-${gemfileHash}`;
-
-    core.setOutput('ruby-key', rubyKey);
-    core.setOutput('cache-key', bundleKey);
+    core.setOutput('ruby-tag', rubyTag);
+    core.setOutput('bundle-tag', bundleTag);
 
     const homedir = os.homedir();
     const miseDir = `${homedir}/.local/share/mise`;
@@ -59,7 +51,7 @@ async function run(): Promise<void> {
     let rubyCacheHit = false;
     if (inputs.cacheRuby) {
       const result = await execBoringCache(
-        ['restore', workspace, `${rubyKey}:${miseDir}`],
+        ['restore', workspace, `${rubyTag}:${miseDir}`],
         { ignoreReturnCode: true }
       );
       rubyCacheHit = result === 0;
@@ -78,7 +70,7 @@ async function run(): Promise<void> {
 
     // Restore bundle cache
     const bundleResult = await execBoringCache(
-      ['restore', workspace, `${bundleKey}:${bundleDir}`],
+      ['restore', workspace, `${bundleTag}:${bundleDir}`],
       { ignoreReturnCode: true }
     );
     const bundleCacheHit = bundleResult === 0;
@@ -86,8 +78,8 @@ async function run(): Promise<void> {
 
     // Save state for post-job save
     core.saveState('workspace', workspace);
-    core.saveState('ruby-key', rubyKey);
-    core.saveState('bundle-key', bundleKey);
+    core.saveState('ruby-tag', rubyTag);
+    core.saveState('bundle-tag', bundleTag);
     core.saveState('mise-dir', miseDir);
     core.saveState('bundle-dir', bundleDir);
     core.saveState('cache-ruby', inputs.cacheRuby.toString());

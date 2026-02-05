@@ -45309,8 +45309,8 @@ async function run() {
         // Get state from restore phase
         const cliVersion = core.getInput('cli-version') || 'v1.0.0';
         const workspace = core.getState('workspace');
-        const rubyKey = core.getState('ruby-key');
-        const bundleKey = core.getState('bundle-key');
+        const rubyTag = core.getState('ruby-tag');
+        const bundleTag = core.getState('bundle-tag');
         const miseDir = core.getState('mise-dir');
         const bundleDir = core.getState('bundle-dir');
         const cacheRuby = core.getState('cache-ruby') === 'true';
@@ -45324,12 +45324,12 @@ async function run() {
         await (0, utils_1.ensureBoringCache)({ version: cliVersion });
         // Save Ruby cache (if not already cached)
         if (cacheRuby && !rubyCacheHit && await (0, utils_1.pathExists)(miseDir)) {
-            const args = ['save', workspace, `${rubyKey}:${miseDir}`];
+            const args = ['save', workspace, `${miseDir}:${rubyTag}`];
             await (0, utils_1.execBoringCache)(args, { ignoreReturnCode: true });
         }
         // Save bundle cache (if not already cached)
         if (!bundleCacheHit && await (0, utils_1.pathExists)(bundleDir)) {
-            const args = ['save', workspace, `${bundleKey}:${bundleDir}`];
+            const args = ['save', workspace, `${bundleDir}:${bundleTag}`];
             if (exclude) {
                 args.push('--exclude', exclude);
             }
@@ -45389,7 +45389,6 @@ exports.execBoringCache = execBoringCache;
 exports.getWorkspace = getWorkspace;
 exports.getCacheTagPrefix = getCacheTagPrefix;
 exports.getRubyVersion = getRubyVersion;
-exports.getFileHash = getFileHash;
 exports.installMise = installMise;
 exports.installRuby = installRuby;
 exports.activateRuby = activateRuby;
@@ -45457,16 +45456,6 @@ async function getRubyVersion(inputVersion, workingDir) {
     }
     // Default
     return '3.3';
-}
-async function getFileHash(filePath) {
-    try {
-        const crypto = await Promise.resolve().then(() => __importStar(__nccwpck_require__(76982)));
-        const content = await fs.promises.readFile(filePath);
-        return crypto.createHash('sha256').update(content).digest('hex').slice(0, 16);
-    }
-    catch {
-        return '';
-    }
 }
 async function installMise() {
     await exec.exec('sh', ['-c', 'curl https://mise.run | sh']);

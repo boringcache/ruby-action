@@ -38,7 +38,6 @@ exports.execBoringCache = execBoringCache;
 exports.getWorkspace = getWorkspace;
 exports.getCacheTagPrefix = getCacheTagPrefix;
 exports.getRubyVersion = getRubyVersion;
-exports.getFileHash = getFileHash;
 exports.installMise = installMise;
 exports.installRuby = installRuby;
 exports.activateRuby = activateRuby;
@@ -106,16 +105,6 @@ async function getRubyVersion(inputVersion, workingDir) {
     }
     // Default
     return '3.3';
-}
-async function getFileHash(filePath) {
-    try {
-        const crypto = await Promise.resolve().then(() => __importStar(require('crypto')));
-        const content = await fs.promises.readFile(filePath);
-        return crypto.createHash('sha256').update(content).digest('hex').slice(0, 16);
-    }
-    catch {
-        return '';
-    }
 }
 async function installMise() {
     await exec.exec('sh', ['-c', 'curl https://mise.run | sh']);

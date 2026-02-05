@@ -73,16 +73,6 @@ export async function getRubyVersion(inputVersion: string, workingDir: string): 
   return '3.3';
 }
 
-export async function getFileHash(filePath: string): Promise<string> {
-  try {
-    const crypto = await import('crypto');
-    const content = await fs.promises.readFile(filePath);
-    return crypto.createHash('sha256').update(content).digest('hex').slice(0, 16);
-  } catch {
-    return '';
-  }
-}
-
 export async function installMise(): Promise<void> {
   await exec.exec('sh', ['-c', 'curl https://mise.run | sh']);
 

@@ -6,8 +6,8 @@ async function run(): Promise<void> {
     // Get state from restore phase
     const cliVersion = core.getInput('cli-version') || 'v1.0.0';
     const workspace = core.getState('workspace');
-    const rubyKey = core.getState('ruby-key');
-    const bundleKey = core.getState('bundle-key');
+    const rubyTag = core.getState('ruby-tag');
+    const bundleTag = core.getState('bundle-tag');
     const miseDir = core.getState('mise-dir');
     const bundleDir = core.getState('bundle-dir');
     const cacheRuby = core.getState('cache-ruby') === 'true';
@@ -24,13 +24,13 @@ async function run(): Promise<void> {
 
     // Save Ruby cache (if not already cached)
     if (cacheRuby && !rubyCacheHit && await pathExists(miseDir)) {
-      const args = ['save', workspace, `${rubyKey}:${miseDir}`];
+      const args = ['save', workspace, `${miseDir}:${rubyTag}`];
       await execBoringCache(args, { ignoreReturnCode: true });
     }
 
     // Save bundle cache (if not already cached)
     if (!bundleCacheHit && await pathExists(bundleDir)) {
-      const args = ['save', workspace, `${bundleKey}:${bundleDir}`];
+      const args = ['save', workspace, `${bundleDir}:${bundleTag}`];
       if (exclude) {
         args.push('--exclude', exclude);
       }
