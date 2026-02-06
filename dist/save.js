@@ -61,7 +61,7 @@ async function run() {
         // Save Ruby cache (if not already cached)
         if (cacheRuby && !rubyCacheHit && await (0, utils_1.pathExists)(miseDir)) {
             core.info(`Saving Ruby cache: ${miseDir} -> ${rubyTag}`);
-            const args = ['save', workspace, `${miseDir}:${rubyTag}`];
+            const args = ['save', workspace, `${rubyTag}:${miseDir}`];
             await (0, utils_1.execBoringCache)(args, { ignoreReturnCode: true });
         }
         else if (cacheRuby && rubyCacheHit) {
@@ -73,7 +73,7 @@ async function run() {
         // Save bundle cache (if not already cached)
         if (!bundleCacheHit && await (0, utils_1.pathExists)(bundleDir)) {
             core.info(`Saving bundle cache: ${bundleDir} -> ${bundleTag}`);
-            const args = ['save', workspace, `${bundleDir}:${bundleTag}`];
+            const args = ['save', workspace, `${bundleTag}:${bundleDir}`];
             if (exclude) {
                 args.push('--exclude', exclude);
             }

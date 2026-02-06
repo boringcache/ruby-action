@@ -31,7 +31,7 @@ async function run(): Promise<void> {
     // Save Ruby cache (if not already cached)
     if (cacheRuby && !rubyCacheHit && await pathExists(miseDir)) {
       core.info(`Saving Ruby cache: ${miseDir} -> ${rubyTag}`);
-      const args = ['save', workspace, `${miseDir}:${rubyTag}`];
+      const args = ['save', workspace, `${rubyTag}:${miseDir}`];
       await execBoringCache(args, { ignoreReturnCode: true });
     } else if (cacheRuby && rubyCacheHit) {
       core.info('Ruby cache already exists, skipping save');
@@ -42,7 +42,7 @@ async function run(): Promise<void> {
     // Save bundle cache (if not already cached)
     if (!bundleCacheHit && await pathExists(bundleDir)) {
       core.info(`Saving bundle cache: ${bundleDir} -> ${bundleTag}`);
-      const args = ['save', workspace, `${bundleDir}:${bundleTag}`];
+      const args = ['save', workspace, `${bundleTag}:${bundleDir}`];
       if (exclude) {
         args.push('--exclude', exclude);
       }
