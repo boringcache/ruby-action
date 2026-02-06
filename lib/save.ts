@@ -1,5 +1,5 @@
 import * as core from '@actions/core';
-import { execBoringCache, pathExists, ensureBoringCache } from './utils';
+import { execBoringCache, ensureBoringCache } from './utils';
 
 async function run(): Promise<void> {
   try {
@@ -21,28 +21,18 @@ async function run(): Promise<void> {
 
     core.info('Saving to BoringCache...');
 
-    // Save Ruby cache
     if (cacheRuby && rubyTag) {
-      if (await pathExists(miseDir)) {
-        core.info(`Saving Ruby [${rubyTag}]...`);
-        await execBoringCache(['save', workspace, `${rubyTag}:${miseDir}`], { ignoreReturnCode: true });
-      } else {
-        core.debug(`Skipping Ruby: ${miseDir} does not exist`);
-      }
+      core.info(`Saving Ruby [${rubyTag}]...`);
+      await execBoringCache(['save', workspace, `${rubyTag}:${miseDir}`]);
     }
 
-    // Save bundle cache
     if (bundleTag) {
-      if (await pathExists(bundleDir)) {
-        core.info(`Saving bundle [${bundleTag}]...`);
-        const args = ['save', workspace, `${bundleTag}:${bundleDir}`];
-        if (exclude) {
-          args.push('--exclude', exclude);
-        }
-        await execBoringCache(args, { ignoreReturnCode: true });
-      } else {
-        core.debug(`Skipping bundle: ${bundleDir} does not exist`);
+      core.info(`Saving bundle [${bundleTag}]...`);
+      const args = ['save', workspace, `${bundleTag}:${bundleDir}`];
+      if (exclude) {
+        args.push('--exclude', exclude);
       }
+      await execBoringCache(args);
     }
 
     core.info('Save complete');

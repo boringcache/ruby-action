@@ -45320,29 +45320,17 @@ async function run() {
         }
         await (0, utils_1.ensureBoringCache)({ version: cliVersion });
         core.info('Saving to BoringCache...');
-        // Save Ruby cache
         if (cacheRuby && rubyTag) {
-            if (await (0, utils_1.pathExists)(miseDir)) {
-                core.info(`Saving Ruby [${rubyTag}]...`);
-                await (0, utils_1.execBoringCache)(['save', workspace, `${rubyTag}:${miseDir}`], { ignoreReturnCode: true });
-            }
-            else {
-                core.debug(`Skipping Ruby: ${miseDir} does not exist`);
-            }
+            core.info(`Saving Ruby [${rubyTag}]...`);
+            await (0, utils_1.execBoringCache)(['save', workspace, `${rubyTag}:${miseDir}`]);
         }
-        // Save bundle cache
         if (bundleTag) {
-            if (await (0, utils_1.pathExists)(bundleDir)) {
-                core.info(`Saving bundle [${bundleTag}]...`);
-                const args = ['save', workspace, `${bundleTag}:${bundleDir}`];
-                if (exclude) {
-                    args.push('--exclude', exclude);
-                }
-                await (0, utils_1.execBoringCache)(args, { ignoreReturnCode: true });
+            core.info(`Saving bundle [${bundleTag}]...`);
+            const args = ['save', workspace, `${bundleTag}:${bundleDir}`];
+            if (exclude) {
+                args.push('--exclude', exclude);
             }
-            else {
-                core.debug(`Skipping bundle: ${bundleDir} does not exist`);
-            }
+            await (0, utils_1.execBoringCache)(args);
         }
         core.info('Save complete');
     }
