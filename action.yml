@@ -30,6 +30,10 @@ inputs:
     description: 'Cache Ruby installation from mise'
     required: false
     default: 'true'
+  verbose:
+    description: 'Enable verbose CLI output for debugging'
+    required: false
+    default: 'false'
   exclude:
     description: 'Glob patterns to exclude from bundle cache (e.g., "*.out,*.log")'
     required: false

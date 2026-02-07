@@ -45316,6 +45316,7 @@ async function run() {
             cacheTagPrefix: core.getInput('cache-tag-prefix') || 'ruby',
             bundlePath: core.getInput('bundle-path') || 'vendor/bundle',
             cacheRuby: core.getBooleanInput('cache-ruby'),
+            verbose: core.getInput('verbose') === 'true',
             exclude: core.getInput('exclude'),
         };
         // Setup BoringCache CLI
@@ -45338,7 +45339,10 @@ async function run() {
         // Restore Ruby cache
         let rubyCacheHit = false;
         if (inputs.cacheRuby) {
-            const result = await (0, utils_1.execBoringCache)(['restore', workspace, `${rubyTag}:${miseDir}`], { ignoreReturnCode: true });
+            const rubyArgs = ['restore', workspace, `${rubyTag}:${miseDir}`];
+            if (inputs.verbose)
+                rubyArgs.push('--verbose');
+            const result = await (0, utils_1.execBoringCache)(rubyArgs, { ignoreReturnCode: true });
             rubyCacheHit = result === 0;
             core.setOutput('ruby-cache-hit', rubyCacheHit.toString());
         }
@@ -45352,7 +45356,10 @@ async function run() {
             await (0, utils_1.installRuby)(rubyVersion);
         }
         // Restore bundle cache
-        const bundleResult = await (0, utils_1.execBoringCache)(['restore', workspace, `${bundleTag}:${bundleDir}`], { ignoreReturnCode: true });
+        const bundleArgs = ['restore', workspace, `${bundleTag}:${bundleDir}`];
+        if (inputs.verbose)
+            bundleArgs.push('--verbose');
+        const bundleResult = await (0, utils_1.execBoringCache)(bundleArgs, { ignoreReturnCode: true });
         const bundleCacheHit = bundleResult === 0;
         core.setOutput('cache-hit', bundleCacheHit.toString());
         // Save state for post-job save
@@ -45364,6 +45371,7 @@ async function run() {
         core.saveState('cache-ruby', inputs.cacheRuby.toString());
         core.saveState('ruby-cache-hit', rubyCacheHit.toString());
         core.saveState('bundle-cache-hit', bundleCacheHit.toString());
+        core.saveState('verbose', inputs.verbose.toString());
         core.saveState('exclude', inputs.exclude);
     }
     catch (error) {

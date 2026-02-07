@@ -44,6 +44,7 @@ async function run() {
         const miseDir = core.getState('mise-dir');
         const bundleDir = core.getState('bundle-dir');
         const cacheRuby = core.getState('cache-ruby') === 'true';
+        const verbose = core.getState('verbose') === 'true';
         const exclude = core.getState('exclude');
         if (!workspace) {
             core.info('No workspace found in state, skipping cache save');
@@ -53,14 +54,18 @@ async function run() {
         core.info('Saving to BoringCache...');
         if (cacheRuby && rubyTag) {
             core.info(`Saving Ruby [${rubyTag}]...`);
-            await (0, utils_1.execBoringCache)(['save', workspace, `${rubyTag}:${miseDir}`]);
+            const rubyArgs = ['save', workspace, `${rubyTag}:${miseDir}`];
+            if (verbose)
+                rubyArgs.push('--verbose');
+            await (0, utils_1.execBoringCache)(rubyArgs);
         }
         if (bundleTag) {
             core.info(`Saving bundle [${bundleTag}]...`);
             const args = ['save', workspace, `${bundleTag}:${bundleDir}`];
-            if (exclude) {
+            if (verbose)
+                args.push('--verbose');
+            if (exclude)
                 args.push('--exclude', exclude);
-            }
             await (0, utils_1.execBoringCache)(args);
         }
         core.info('Save complete');

@@ -21,6 +21,7 @@ async function run(): Promise<void> {
       cacheTagPrefix: core.getInput('cache-tag-prefix') || 'ruby',
       bundlePath: core.getInput('bundle-path') || 'vendor/bundle',
       cacheRuby: core.getBooleanInput('cache-ruby'),
+      verbose: core.getInput('verbose') === 'true',
       exclude: core.getInput('exclude'),
     };
 
@@ -50,8 +51,10 @@ async function run(): Promise<void> {
     // Restore Ruby cache
     let rubyCacheHit = false;
     if (inputs.cacheRuby) {
+      const rubyArgs = ['restore', workspace, `${rubyTag}:${miseDir}`];
+      if (inputs.verbose) rubyArgs.push('--verbose');
       const result = await execBoringCache(
-        ['restore', workspace, `${rubyTag}:${miseDir}`],
+        rubyArgs,
         { ignoreReturnCode: true }
       );
       rubyCacheHit = result === 0;
@@ -69,8 +72,10 @@ async function run(): Promise<void> {
     }
 
     // Restore bundle cache
+    const bundleArgs = ['restore', workspace, `${bundleTag}:${bundleDir}`];
+    if (inputs.verbose) bundleArgs.push('--verbose');
     const bundleResult = await execBoringCache(
-      ['restore', workspace, `${bundleTag}:${bundleDir}`],
+      bundleArgs,
       { ignoreReturnCode: true }
     );
     const bundleCacheHit = bundleResult === 0;
@@ -85,6 +90,7 @@ async function run(): Promise<void> {
     core.saveState('cache-ruby', inputs.cacheRuby.toString());
     core.saveState('ruby-cache-hit', rubyCacheHit.toString());
     core.saveState('bundle-cache-hit', bundleCacheHit.toString());
+    core.saveState('verbose', inputs.verbose.toString());
     core.saveState('exclude', inputs.exclude);
 
   } catch (error) {

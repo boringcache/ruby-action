@@ -10,6 +10,7 @@ async function run(): Promise<void> {
     const miseDir = core.getState('mise-dir');
     const bundleDir = core.getState('bundle-dir');
     const cacheRuby = core.getState('cache-ruby') === 'true';
+    const verbose = core.getState('verbose') === 'true';
     const exclude = core.getState('exclude');
 
     if (!workspace) {
@@ -23,15 +24,16 @@ async function run(): Promise<void> {
 
     if (cacheRuby && rubyTag) {
       core.info(`Saving Ruby [${rubyTag}]...`);
-      await execBoringCache(['save', workspace, `${rubyTag}:${miseDir}`]);
+      const rubyArgs = ['save', workspace, `${rubyTag}:${miseDir}`];
+      if (verbose) rubyArgs.push('--verbose');
+      await execBoringCache(rubyArgs);
     }
 
     if (bundleTag) {
       core.info(`Saving bundle [${bundleTag}]...`);
       const args = ['save', workspace, `${bundleTag}:${bundleDir}`];
-      if (exclude) {
-        args.push('--exclude', exclude);
-      }
+      if (verbose) args.push('--verbose');
+      if (exclude) args.push('--exclude', exclude);
       await execBoringCache(args);
     }
 
