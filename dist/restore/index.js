@@ -45304,7 +45304,6 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(37484));
 const path = __importStar(__nccwpck_require__(16928));
-const os = __importStar(__nccwpck_require__(70857));
 const utils_1 = __nccwpck_require__(2219);
 async function run() {
     try {
@@ -45333,8 +45332,7 @@ async function run() {
         const bundleTag = `${inputs.cacheTagPrefix}-bundle-${rubyVersion}`;
         core.setOutput('ruby-tag', rubyTag);
         core.setOutput('bundle-tag', bundleTag);
-        const homedir = os.homedir();
-        const miseDir = `${homedir}/.local/share/mise`;
+        const miseDir = (0, utils_1.getMiseDataDir)();
         const bundleDir = path.join(workingDir, inputs.bundlePath);
         // Restore Ruby cache
         let rubyCacheHit = false;
@@ -45423,6 +45421,8 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ensureBoringCache = void 0;
+exports.getMiseBinPath = getMiseBinPath;
+exports.getMiseDataDir = getMiseDataDir;
 exports.execBoringCache = execBoringCache;
 exports.getWorkspace = getWorkspace;
 exports.getCacheTagPrefix = getCacheTagPrefix;
@@ -45438,6 +45438,19 @@ const path = __importStar(__nccwpck_require__(16928));
 const os = __importStar(__nccwpck_require__(70857));
 const action_core_1 = __nccwpck_require__(68701);
 Object.defineProperty(exports, "ensureBoringCache", ({ enumerable: true, get: function () { return action_core_1.ensureBoringCache; } }));
+const isWindows = process.platform === 'win32';
+function getMiseBinPath() {
+    const homedir = os.homedir();
+    return isWindows
+        ? path.join(homedir, '.local', 'bin', 'mise.exe')
+        : path.join(homedir, '.local', 'bin', 'mise');
+}
+function getMiseDataDir() {
+    if (isWindows) {
+        return path.join(process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local'), 'mise');
+    }
+    return path.join(os.homedir(), '.local', 'share', 'mise');
+}
 async function execBoringCache(args, options = {}) {
     var _a;
     const code = await (0, action_core_1.execBoringCache)(args, {
@@ -45506,20 +45519,23 @@ async function getRubyVersion(inputVersion, workingDir) {
     return '3.3';
 }
 async function installMise() {
-    await exec.exec('sh', ['-c', 'curl https://mise.run | sh']);
+    if (isWindows) {
+        await exec.exec('powershell', ['-c', 'irm https://mise.jdx.dev/install.ps1 | iex']);
+    }
+    else {
+        await exec.exec('sh', ['-c', 'curl https://mise.run | sh']);
+    }
     const homedir = os.homedir();
-    core.addPath(`${homedir}/.local/bin`);
-    core.addPath(`${homedir}/.local/share/mise/shims`);
+    core.addPath(path.join(homedir, '.local', 'bin'));
+    core.addPath(path.join(getMiseDataDir(), 'shims'));
 }
 async function installRuby(version) {
-    const homedir = os.homedir();
-    const misePath = `${homedir}/.local/bin/mise`;
+    const misePath = getMiseBinPath();
     await exec.exec(misePath, ['install', `ruby@${version}`]);
     await exec.exec(misePath, ['use', '-g', `ruby@${version}`]);
 }
 async function activateRuby(version) {
-    const homedir = os.homedir();
-    const misePath = `${homedir}/.local/bin/mise`;
+    const misePath = getMiseBinPath();
     await exec.exec(misePath, ['use', '-g', `ruby@${version}`]);
 }
 async function pathExists(p) {

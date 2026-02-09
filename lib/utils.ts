@@ -7,6 +7,22 @@ import { ensureBoringCache, execBoringCache as execBoringCacheCore } from '@bori
 
 export { ensureBoringCache };
 
+const isWindows = process.platform === 'win32';
+
+export function getMiseBinPath(): string {
+  const homedir = os.homedir();
+  return isWindows
+    ? path.join(homedir, '.local', 'bin', 'mise.exe')
+    : path.join(homedir, '.local', 'bin', 'mise');
+}
+
+export function getMiseDataDir(): string {
+  if (isWindows) {
+    return path.join(process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local'), 'mise');
+  }
+  return path.join(os.homedir(), '.local', 'share', 'mise');
+}
+
 export async function execBoringCache(args: string[], options: { ignoreReturnCode?: boolean } = {}): Promise<number> {
   const code = await execBoringCacheCore(args, {
     ignoreReturnCode: options.ignoreReturnCode ?? false,
@@ -84,24 +100,26 @@ export async function getRubyVersion(inputVersion: string, workingDir: string): 
 }
 
 export async function installMise(): Promise<void> {
-  await exec.exec('sh', ['-c', 'curl https://mise.run | sh']);
+  if (isWindows) {
+    await exec.exec('powershell', ['-c', 'irm https://mise.jdx.dev/install.ps1 | iex']);
+  } else {
+    await exec.exec('sh', ['-c', 'curl https://mise.run | sh']);
+  }
 
   const homedir = os.homedir();
-  core.addPath(`${homedir}/.local/bin`);
-  core.addPath(`${homedir}/.local/share/mise/shims`);
+  core.addPath(path.join(homedir, '.local', 'bin'));
+  core.addPath(path.join(getMiseDataDir(), 'shims'));
 }
 
 export async function installRuby(version: string): Promise<void> {
-  const homedir = os.homedir();
-  const misePath = `${homedir}/.local/bin/mise`;
+  const misePath = getMiseBinPath();
 
   await exec.exec(misePath, ['install', `ruby@${version}`]);
   await exec.exec(misePath, ['use', '-g', `ruby@${version}`]);
 }
 
 export async function activateRuby(version: string): Promise<void> {
-  const homedir = os.homedir();
-  const misePath = `${homedir}/.local/bin/mise`;
+  const misePath = getMiseBinPath();
 
   await exec.exec(misePath, ['use', '-g', `ruby@${version}`]);
 }

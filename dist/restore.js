@@ -35,7 +35,6 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(require("@actions/core"));
 const path = __importStar(require("path"));
-const os = __importStar(require("os"));
 const utils_1 = require("./utils");
 async function run() {
     try {
@@ -64,8 +63,7 @@ async function run() {
         const bundleTag = `${inputs.cacheTagPrefix}-bundle-${rubyVersion}`;
         core.setOutput('ruby-tag', rubyTag);
         core.setOutput('bundle-tag', bundleTag);
-        const homedir = os.homedir();
-        const miseDir = `${homedir}/.local/share/mise`;
+        const miseDir = (0, utils_1.getMiseDataDir)();
         const bundleDir = path.join(workingDir, inputs.bundlePath);
         // Restore Ruby cache
         let rubyCacheHit = false;

@@ -1,6 +1,5 @@
 import * as core from '@actions/core';
 import * as path from 'path';
-import * as os from 'os';
 import {
   ensureBoringCache,
   execBoringCache,
@@ -9,6 +8,7 @@ import {
   installMise,
   installRuby,
   activateRuby,
+  getMiseDataDir,
 } from './utils';
 
 async function run(): Promise<void> {
@@ -44,8 +44,7 @@ async function run(): Promise<void> {
     core.setOutput('ruby-tag', rubyTag);
     core.setOutput('bundle-tag', bundleTag);
 
-    const homedir = os.homedir();
-    const miseDir = `${homedir}/.local/share/mise`;
+    const miseDir = getMiseDataDir();
     const bundleDir = path.join(workingDir, inputs.bundlePath);
 
     // Restore Ruby cache
