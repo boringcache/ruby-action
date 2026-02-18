@@ -1,6 +1,6 @@
 {
   "name": "boringcache-ruby",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Setup Ruby with mise and cache via BoringCache.",
   "main": "dist/restore/index.js",
   "scripts": {

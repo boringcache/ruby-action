@@ -41614,7 +41614,7 @@ const path = __importStar(__nccwpck_require__(6928));
 const utils_1 = __nccwpck_require__(2219);
 async function run() {
     try {
-        const cliVersion = core.getInput('cli-version') || 'v1.0.1';
+        const cliVersion = core.getInput('cli-version') || 'v1.0.2';
         const inputs = {
             workspace: core.getInput('workspace'),
             rubyVersion: core.getInput('ruby-version'),
