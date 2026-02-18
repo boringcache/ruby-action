@@ -38,7 +38,7 @@ const path = __importStar(require("path"));
 const utils_1 = require("./utils");
 async function run() {
     try {
-        const cliVersion = core.getInput('cli-version') || 'v1.0.0';
+        const cliVersion = core.getInput('cli-version') || 'v1.0.1';
         const inputs = {
             workspace: core.getInput('workspace'),
             rubyVersion: core.getInput('ruby-version'),
