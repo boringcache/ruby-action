@@ -13,7 +13,7 @@ import {
 
 async function run(): Promise<void> {
   try {
-    const cliVersion = core.getInput('cli-version') || 'v1.0.3';
+    const cliVersion = core.getInput('cli-version') || 'v1.1.0';
     const inputs = {
       workspace: core.getInput('workspace'),
       rubyVersion: core.getInput('ruby-version'),
