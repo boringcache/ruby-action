@@ -1,14 +1,8 @@
 # boringcache/ruby-action
 
-**Cache once. Reuse everywhere.**
+Setup Ruby and cache Bundler gems with BoringCache.
 
-BoringCache is a universal build artifact cache for CI, Docker, and local development. It stores and restores directories you choose so build outputs, dependencies, and tool caches can be reused across environments.
-
-BoringCache does not run builds and is not tied to any build tool. It works with any language, framework, or workflow by caching directories explicitly selected by the user.
-
-Caches are content-addressed and verified before restore. If identical content already exists, uploads are skipped. The same cache can be reused in GitHub Actions, Docker/BuildKit, and on developer machines using the same CLI.
-
-This action installs Ruby and configures BoringCache to cache its artifacts. It uses the same BoringCache CLI and cache format as all other BoringCache actions.
+Installs Ruby via [mise](https://mise.jdx.dev), restores cached directories before your job runs, and saves them when it finishes. Caches are content-addressed — identical content is never re-uploaded.
 
 ## Quick start
 
