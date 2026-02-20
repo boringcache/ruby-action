@@ -3,7 +3,7 @@ import { execBoringCache, ensureBoringCache } from './utils';
 
 async function run(): Promise<void> {
   try {
-    const cliVersion = core.getInput('cli-version') || 'v1.2.0';
+    const cliVersion = core.getInput('cli-version') || 'v1.3.0';
     const workspace = core.getState('workspace');
     const rubyTag = core.getState('ruby-tag');
     const bundleTag = core.getState('bundle-tag');
