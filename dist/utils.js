@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ensureBoringCache = void 0;
+exports.pathExists = exports.ensureBoringCache = void 0;
 exports.getMiseBinPath = getMiseBinPath;
 exports.getMiseDataDir = getMiseDataDir;
 exports.execBoringCache = execBoringCache;
@@ -43,7 +43,6 @@ exports.getRubyVersion = getRubyVersion;
 exports.installMise = installMise;
 exports.installRuby = installRuby;
 exports.activateRuby = activateRuby;
-exports.pathExists = pathExists;
 const core = __importStar(require("@actions/core"));
 const exec = __importStar(require("@actions/exec"));
 const fs = __importStar(require("fs"));
@@ -51,6 +50,7 @@ const path = __importStar(require("path"));
 const os = __importStar(require("os"));
 const action_core_1 = require("@boringcache/action-core");
 Object.defineProperty(exports, "ensureBoringCache", { enumerable: true, get: function () { return action_core_1.ensureBoringCache; } });
+Object.defineProperty(exports, "pathExists", { enumerable: true, get: function () { return action_core_1.pathExists; } });
 const isWindows = process.platform === 'win32';
 function getMiseBinPath() {
     const homedir = os.homedir();
@@ -81,42 +81,22 @@ async function execBoringCache(args, options = {}) {
     return code;
 }
 function getWorkspace(inputWorkspace) {
-    let workspace = inputWorkspace || process.env.BORINGCACHE_DEFAULT_WORKSPACE || '';
-    if (!workspace) {
-        core.setFailed('Workspace is required. Set workspace input or BORINGCACHE_DEFAULT_WORKSPACE env var.');
-        throw new Error('Workspace required');
-    }
-    // Ensure namespace/workspace format
-    if (!workspace.includes('/')) {
-        workspace = `default/${workspace}`;
-    }
-    return workspace;
+    return (0, action_core_1.getWorkspace)(inputWorkspace);
 }
 function getCacheTagPrefix(inputCacheTag) {
-    if (inputCacheTag) {
-        return inputCacheTag;
-    }
-    const repo = process.env.GITHUB_REPOSITORY || '';
-    if (repo) {
-        const repoName = repo.split('/')[1] || repo;
-        return repoName;
-    }
-    return 'ruby';
+    return (0, action_core_1.getCacheTagPrefix)(inputCacheTag, 'ruby');
 }
 async function getRubyVersion(inputVersion, workingDir) {
     if (inputVersion) {
         return inputVersion;
     }
-    // Check .ruby-version
     const rubyVersionFile = path.join(workingDir, '.ruby-version');
     try {
         const content = await fs.promises.readFile(rubyVersionFile, 'utf-8');
         return content.trim();
     }
     catch {
-        // Not found, continue
     }
-    // Check .tool-versions
     const toolVersionsFile = path.join(workingDir, '.tool-versions');
     try {
         const content = await fs.promises.readFile(toolVersionsFile, 'utf-8');
@@ -126,9 +106,7 @@ async function getRubyVersion(inputVersion, workingDir) {
         }
     }
     catch {
-        // Not found, continue
     }
-    // Default
     return '3.3';
 }
 async function installMise() {
@@ -167,13 +145,4 @@ async function installRuby(version) {
 async function activateRuby(version) {
     const misePath = getMiseBinPath();
     await exec.exec(misePath, ['use', '-g', `ruby@${version}`]);
-}
-async function pathExists(p) {
-    try {
-        await fs.promises.access(p);
-        return true;
-    }
-    catch {
-        return false;
-    }
 }
