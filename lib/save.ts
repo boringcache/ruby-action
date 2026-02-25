@@ -4,7 +4,7 @@ import { execBoringCache, ensureBoringCache } from './utils';
 async function run(): Promise<void> {
   try {
     const cliVersion = core.getInput('cli-version');
-    const workspace = core.getState('workspace');
+    const workspace = core.getInput('workspace') || core.getState('workspace');
     const rubyTag = core.getState('ruby-tag');
     const bundleTag = core.getState('bundle-tag');
     const miseDir = core.getState('mise-dir');
@@ -18,7 +18,9 @@ async function run(): Promise<void> {
       return;
     }
 
-    await ensureBoringCache({ version: cliVersion });
+    if (cliVersion.toLowerCase() !== 'skip') {
+      await ensureBoringCache({ version: cliVersion });
+    }
 
     core.info('Saving to BoringCache...');
 

@@ -43,24 +43,24 @@ async function run() {
             workspace: core.getInput('workspace'),
             rubyVersion: core.getInput('ruby-version'),
             workingDirectory: core.getInput('working-directory') || '.',
-            cacheTagPrefix: core.getInput('cache-tag-prefix') || 'ruby',
+            cacheTagPrefix: core.getInput('cache-tag') || '',
             bundlePath: core.getInput('bundle-path') || 'vendor/bundle',
-            cacheRuby: core.getBooleanInput('cache-ruby'),
+            cacheRuby: core.getInput('cache-ruby') !== 'false',
             verbose: core.getInput('verbose') === 'true',
             exclude: core.getInput('exclude'),
         };
-        // Setup BoringCache CLI
-        await (0, utils_1.ensureBoringCache)({ version: cliVersion });
+        if (cliVersion.toLowerCase() !== 'skip') {
+            await (0, utils_1.ensureBoringCache)({ version: cliVersion });
+        }
         // Get workspace
         const workspace = (0, utils_1.getWorkspace)(inputs.workspace);
         core.setOutput('workspace', workspace);
-        // Get Ruby version
+        const cacheTagPrefix = (0, utils_1.getCacheTagPrefix)(inputs.cacheTagPrefix);
         const workingDir = path.resolve(inputs.workingDirectory);
         const rubyVersion = await (0, utils_1.getRubyVersion)(inputs.rubyVersion, workingDir);
         core.setOutput('ruby-version', rubyVersion);
-        // Generate cache tags (content-addressing handled by CLI)
-        const rubyTag = `${inputs.cacheTagPrefix}-ruby-${rubyVersion}`;
-        const bundleTag = `${inputs.cacheTagPrefix}-bundle-${rubyVersion}`;
+        const rubyTag = `${cacheTagPrefix}-ruby-${rubyVersion}`;
+        const bundleTag = `${cacheTagPrefix}-bundle-${rubyVersion}`;
         core.setOutput('ruby-tag', rubyTag);
         core.setOutput('bundle-tag', bundleTag);
         const miseDir = (0, utils_1.getMiseDataDir)();

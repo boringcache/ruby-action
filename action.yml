@@ -18,10 +18,10 @@ inputs:
   workspace:
     description: 'BoringCache workspace identifier (e.g., my-org/my-project). Required.'
     required: false
-  cache-tag-prefix:
-    description: 'Prefix for cache tags. Useful for cache invalidation.'
+  cache-tag:
+    description: 'Cache tag prefix. Defaults to repository name.'
     required: false
-    default: 'ruby'
+    default: ''
   bundle-path:
     description: 'Path where gems are installed'
     required: false

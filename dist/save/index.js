@@ -42150,7 +42150,7 @@ const utils_1 = __nccwpck_require__(2219);
 async function run() {
     try {
         const cliVersion = core.getInput('cli-version');
-        const workspace = core.getState('workspace');
+        const workspace = core.getInput('workspace') || core.getState('workspace');
         const rubyTag = core.getState('ruby-tag');
         const bundleTag = core.getState('bundle-tag');
         const miseDir = core.getState('mise-dir');
@@ -42162,7 +42162,9 @@ async function run() {
             core.info('No workspace found in state, skipping cache save');
             return;
         }
-        await (0, utils_1.ensureBoringCache)({ version: cliVersion });
+        if (cliVersion.toLowerCase() !== 'skip') {
+            await (0, utils_1.ensureBoringCache)({ version: cliVersion });
+        }
         core.info('Saving to BoringCache...');
         if (cacheRuby && rubyTag) {
             core.info(`Saving Ruby [${rubyTag}]...`);
