@@ -1,4 +1,5 @@
 import * as core from '@actions/core';
+import { hasSaveToken, missingSaveTokenMessage } from '@boringcache/action-core';
 import { execBoringCache, ensureBoringCache } from './utils';
 
 async function run(): Promise<void> {
@@ -15,6 +16,11 @@ async function run(): Promise<void> {
 
     if (!workspace) {
       core.info('No workspace found in state, skipping cache save');
+      return;
+    }
+
+    if (!hasSaveToken()) {
+      core.notice(`Save skipped: ${missingSaveTokenMessage()}`);
       return;
     }
 

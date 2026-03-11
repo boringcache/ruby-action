@@ -11,11 +11,23 @@ Installs Ruby via [mise](https://mise.jdx.dev), restores cached directories befo
   with:
     workspace: my-org/my-project
   env:
-    BORINGCACHE_API_TOKEN: ${{ secrets.BORINGCACHE_API_TOKEN }}
+    BORINGCACHE_SAVE_TOKEN: ${{ secrets.BORINGCACHE_SAVE_TOKEN }}
 
 - run: bundle install
 - run: bundle exec rake test
 ```
+
+## Recommended auth model
+
+For new workflows, provide a restore token to every job and only provide a save token to trusted branch/tag jobs:
+
+```yaml
+env:
+  BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+  BORINGCACHE_SAVE_TOKEN: ${{ github.event_name == 'pull_request' && '' || secrets.BORINGCACHE_SAVE_TOKEN }}
+```
+
+On pull requests, the action restores caches and skips the post-save step when no save-capable token is configured.
 
 ## Mental model
 
@@ -52,7 +64,7 @@ The `exclude: '*.out'` default excludes gem build logs (`gem_make.out`) that con
   with:
     workspace: my-org/my-project
   env:
-    BORINGCACHE_API_TOKEN: ${{ secrets.BORINGCACHE_API_TOKEN }}
+    BORINGCACHE_SAVE_TOKEN: ${{ secrets.BORINGCACHE_SAVE_TOKEN }}
 
 - run: bundle install
 - run: bundle exec rspec
@@ -65,7 +77,7 @@ The `exclude: '*.out'` default excludes gem build logs (`gem_make.out`) that con
   with:
     workspace: my-org/my-rails-app
   env:
-    BORINGCACHE_API_TOKEN: ${{ secrets.BORINGCACHE_API_TOKEN }}
+    BORINGCACHE_SAVE_TOKEN: ${{ secrets.BORINGCACHE_SAVE_TOKEN }}
 
 - run: bundle install
 - run: bin/rails db:setup
@@ -80,7 +92,7 @@ The `exclude: '*.out'` default excludes gem build logs (`gem_make.out`) that con
     workspace: my-org/my-project
     ruby-version: '3.2'
   env:
-    BORINGCACHE_API_TOKEN: ${{ secrets.BORINGCACHE_API_TOKEN }}
+    BORINGCACHE_SAVE_TOKEN: ${{ secrets.BORINGCACHE_SAVE_TOKEN }}
 ```
 
 ## Inputs
@@ -118,12 +130,13 @@ By default, caches are isolated by OS and architecture. Ruby native extensions a
 
 | Variable | Description |
 |----------|-------------|
-| `BORINGCACHE_API_TOKEN` | API token (required) |
+| `BORINGCACHE_RESTORE_TOKEN` | Restore-capable token for pull requests and other read-only jobs |
+| `BORINGCACHE_SAVE_TOKEN` | Save-capable token for trusted jobs that should publish cache updates |
 | `BORINGCACHE_DEFAULT_WORKSPACE` | Default workspace (if not specified in inputs) |
 
 ## Troubleshooting
 
-- Unauthorized or workspace not found: ensure `BORINGCACHE_API_TOKEN` is set and the workspace exists.
+- Unauthorized or workspace not found: ensure the appropriate BoringCache token is set and the workspace exists.
 - Cache miss: check `workspace` and version detection files.
 - Gem build issues: the `exclude: '*.out'` default handles non-deterministic build logs.
 
