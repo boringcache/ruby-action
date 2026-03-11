@@ -1,6 +1,10 @@
 # boringcache/ruby-action
 
-Set up Ruby via mise and cache Ruby plus Bundler gems with BoringCache.
+Set up Ruby and cache Bundler installs.
+
+## When to use it
+
+Choose this for Bundler-based builds where you want Ruby setup and `vendor/bundle` caching together.
 
 ## Quick start
 
@@ -16,7 +20,13 @@ Set up Ruby via mise and cache Ruby plus Bundler gems with BoringCache.
 - run: bundle exec rspec
 ```
 
-## What it caches
+## Trust model
+
+- Restore works on pull requests with `BORINGCACHE_RESTORE_TOKEN`.
+- Save is skipped automatically when no save-capable token is configured.
+- Cache Ruby installs and `vendor/bundle`, not external shim directories.
+
+## What it handles
 
 - Ruby from `.ruby-version` or `.tool-versions` (fallback: `3.3`).
 - The Ruby installation under mise.
@@ -44,7 +54,7 @@ Set up Ruby via mise and cache Ruby plus Bundler gems with BoringCache.
 | `ruby-cache-hit` | Whether the Ruby runtime cache was restored. |
 | `workspace` | Resolved workspace name. |
 
-## Docs
+## Learn more
 
 - [Language actions docs](https://boringcache.com/docs#language-actions)
 - [GitHub Actions auth and trust model](https://boringcache.com/docs#actions-auth)
