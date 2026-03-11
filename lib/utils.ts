@@ -75,7 +75,25 @@ export async function getRubyVersion(inputVersion: string, workingDir: string): 
   } catch {
   }
 
+  const miseVersion = await readMiseTomlVersion(workingDir, 'ruby');
+  if (miseVersion) return miseVersion;
+
   return '3.3';
+}
+
+async function readMiseTomlVersion(workingDir: string, toolName: string): Promise<string | null> {
+  const miseToml = path.join(workingDir, 'mise.toml');
+  try {
+    const content = await fs.promises.readFile(miseToml, 'utf-8');
+    const toolsMatch = content.match(/\[tools\]([\s\S]*?)(?:\n\[|$)/);
+    if (toolsMatch) {
+      const versionMatch = toolsMatch[1].match(
+        new RegExp(`^\\s*${toolName}\\s*=\\s*["']([^"']+)["']`, 'm')
+      );
+      if (versionMatch) return versionMatch[1];
+    }
+  } catch {}
+  return null;
 }
 
 export async function installMise(): Promise<void> {
@@ -112,10 +130,15 @@ async function installMiseWindows(): Promise<void> {
   }
 }
 
-export async function installRuby(version: string): Promise<void> {
+export async function installRuby(version: string, compile: boolean = true): Promise<void> {
   const misePath = getMiseBinPath();
+  const env: Record<string, string> = { ...process.env as Record<string, string> };
+  if (!compile) {
+    env.MISE_RUBY_COMPILE = '0';
+    core.info('Using precompiled Ruby binary (falling back to source if unavailable)');
+  }
 
-  await exec.exec(misePath, ['install', `ruby@${version}`]);
+  await exec.exec(misePath, ['install', `ruby@${version}`], { env });
   await exec.exec(misePath, ['use', '-g', `ruby@${version}`]);
 }
 
@@ -123,4 +146,37 @@ export async function activateRuby(version: string): Promise<void> {
   const misePath = getMiseBinPath();
 
   await exec.exec(misePath, ['use', '-g', `ruby@${version}`]);
+}
+
+export async function configureBundler(workingDir: string, bundlePath: string): Promise<void> {
+  core.info(`Configuring Bundler path: ${bundlePath}`);
+  await exec.exec('bundle', ['config', 'set', '--local', 'path', bundlePath], {
+    cwd: workingDir,
+    ignoreReturnCode: true,
+  });
+}
+
+export async function readBundlerVersion(workingDir: string): Promise<string | null> {
+  const lockfile = path.join(workingDir, 'Gemfile.lock');
+  try {
+    const content = await fs.promises.readFile(lockfile, 'utf-8');
+    const match = content.match(/BUNDLED WITH\n\s+(\S+)/);
+    return match ? match[1] : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function installBundler(version: string): Promise<void> {
+  core.info(`Installing Bundler ${version}...`);
+  await exec.exec('gem', ['install', 'bundler', '-v', version, '--no-document'], {
+    ignoreReturnCode: true,
+  });
+}
+
+export async function runBundleInstall(workingDir: string): Promise<void> {
+  core.info('Running bundle install...');
+  await exec.exec('bundle', ['install', '--jobs', '4', '--retry', '3'], {
+    cwd: workingDir,
+  });
 }

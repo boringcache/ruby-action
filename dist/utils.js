@@ -43,6 +43,10 @@ exports.getRubyVersion = getRubyVersion;
 exports.installMise = installMise;
 exports.installRuby = installRuby;
 exports.activateRuby = activateRuby;
+exports.configureBundler = configureBundler;
+exports.readBundlerVersion = readBundlerVersion;
+exports.installBundler = installBundler;
+exports.runBundleInstall = runBundleInstall;
 const core = __importStar(require("@actions/core"));
 const exec = __importStar(require("@actions/exec"));
 const fs = __importStar(require("fs"));
@@ -107,7 +111,24 @@ async function getRubyVersion(inputVersion, workingDir) {
     }
     catch {
     }
+    const miseVersion = await readMiseTomlVersion(workingDir, 'ruby');
+    if (miseVersion)
+        return miseVersion;
     return '3.3';
+}
+async function readMiseTomlVersion(workingDir, toolName) {
+    const miseToml = path.join(workingDir, 'mise.toml');
+    try {
+        const content = await fs.promises.readFile(miseToml, 'utf-8');
+        const toolsMatch = content.match(/\[tools\]([\s\S]*?)(?:\n\[|$)/);
+        if (toolsMatch) {
+            const versionMatch = toolsMatch[1].match(new RegExp(`^\\s*${toolName}\\s*=\\s*["']([^"']+)["']`, 'm'));
+            if (versionMatch)
+                return versionMatch[1];
+        }
+    }
+    catch { }
+    return null;
 }
 async function installMise() {
     core.info('Installing mise...');
@@ -137,12 +158,47 @@ async function installMiseWindows() {
         await fs.promises.rm(tempDir, { recursive: true, force: true });
     }
 }
-async function installRuby(version) {
+async function installRuby(version, compile = true) {
     const misePath = getMiseBinPath();
-    await exec.exec(misePath, ['install', `ruby@${version}`]);
+    const env = { ...process.env };
+    if (!compile) {
+        env.MISE_RUBY_COMPILE = '0';
+        core.info('Using precompiled Ruby binary (falling back to source if unavailable)');
+    }
+    await exec.exec(misePath, ['install', `ruby@${version}`], { env });
     await exec.exec(misePath, ['use', '-g', `ruby@${version}`]);
 }
 async function activateRuby(version) {
     const misePath = getMiseBinPath();
     await exec.exec(misePath, ['use', '-g', `ruby@${version}`]);
+}
+async function configureBundler(workingDir, bundlePath) {
+    core.info(`Configuring Bundler path: ${bundlePath}`);
+    await exec.exec('bundle', ['config', 'set', '--local', 'path', bundlePath], {
+        cwd: workingDir,
+        ignoreReturnCode: true,
+    });
+}
+async function readBundlerVersion(workingDir) {
+    const lockfile = path.join(workingDir, 'Gemfile.lock');
+    try {
+        const content = await fs.promises.readFile(lockfile, 'utf-8');
+        const match = content.match(/BUNDLED WITH\n\s+(\S+)/);
+        return match ? match[1] : null;
+    }
+    catch {
+        return null;
+    }
+}
+async function installBundler(version) {
+    core.info(`Installing Bundler ${version}...`);
+    await exec.exec('gem', ['install', 'bundler', '-v', version, '--no-document'], {
+        ignoreReturnCode: true,
+    });
+}
+async function runBundleInstall(workingDir) {
+    core.info('Running bundle install...');
+    await exec.exec('bundle', ['install', '--jobs', '4', '--retry', '3'], {
+        cwd: workingDir,
+    });
 }

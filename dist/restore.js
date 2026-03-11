@@ -46,6 +46,9 @@ async function run() {
             cacheTagPrefix: core.getInput('cache-tag') || '',
             bundlePath: core.getInput('bundle-path') || 'vendor/bundle',
             cacheRuby: core.getInput('cache-ruby') !== 'false',
+            compile: core.getInput('compile') === 'true',
+            bundlerCache: core.getInput('bundler-cache') === 'true',
+            bundlerVersion: core.getInput('bundler-version') || '',
             verbose: core.getInput('verbose') === 'true',
             exclude: core.getInput('exclude'),
         };
@@ -82,7 +85,13 @@ async function run() {
             await (0, utils_1.activateRuby)(rubyVersion);
         }
         else {
-            await (0, utils_1.installRuby)(rubyVersion);
+            await (0, utils_1.installRuby)(rubyVersion, inputs.compile);
+        }
+        // Configure Bundler path and version
+        await (0, utils_1.configureBundler)(workingDir, inputs.bundlePath);
+        const bundlerVersion = inputs.bundlerVersion || await (0, utils_1.readBundlerVersion)(workingDir);
+        if (bundlerVersion) {
+            await (0, utils_1.installBundler)(bundlerVersion);
         }
         // Restore bundle cache
         const bundleArgs = ['restore', workspace, `${bundleTag}:${bundleDir}`];
@@ -91,6 +100,10 @@ async function run() {
         const bundleResult = await (0, utils_1.execBoringCache)(bundleArgs, { ignoreReturnCode: true });
         const bundleCacheHit = bundleResult === 0;
         core.setOutput('cache-hit', bundleCacheHit.toString());
+        // Auto-run bundle install if opted in
+        if (inputs.bundlerCache) {
+            await (0, utils_1.runBundleInstall)(workingDir);
+        }
         // Save state for post-job save
         core.saveState('workspace', workspace);
         core.saveState('ruby-tag', rubyTag);

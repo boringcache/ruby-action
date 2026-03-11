@@ -8,9 +8,13 @@ inputs:
     required: false
     default: 'v1.12.3'
   ruby-version:
-    description: 'Ruby version to install via mise. Defaults to .ruby-version file if present.'
+    description: 'Ruby version to install via mise. Auto-detected from .ruby-version, .tool-versions, or mise.toml if not specified.'
     required: false
     default: ''
+  compile:
+    description: 'Compile Ruby from source. Set to false (default) to use precompiled binaries for faster installs.'
+    required: false
+    default: 'false'
   working-directory:
     description: 'Working directory. Defaults to repository root.'
     required: false
@@ -26,6 +30,14 @@ inputs:
     description: 'Path where gems are installed'
     required: false
     default: 'vendor/bundle'
+  bundler-cache:
+    description: 'Automatically run bundle install after setup (like ruby/setup-ruby bundler-cache)'
+    required: false
+    default: 'false'
+  bundler-version:
+    description: 'Bundler version to install. Auto-detected from Gemfile.lock BUNDLED WITH if not specified.'
+    required: false
+    default: ''
   cache-ruby:
     description: 'Cache Ruby installation from mise'
     required: false

@@ -10,6 +10,10 @@ import {
   installRuby,
   activateRuby,
   getMiseDataDir,
+  configureBundler,
+  readBundlerVersion,
+  installBundler,
+  runBundleInstall,
 } from './utils';
 
 async function run(): Promise<void> {
@@ -22,6 +26,9 @@ async function run(): Promise<void> {
       cacheTagPrefix: core.getInput('cache-tag') || '',
       bundlePath: core.getInput('bundle-path') || 'vendor/bundle',
       cacheRuby: core.getInput('cache-ruby') !== 'false',
+      compile: core.getInput('compile') === 'true',
+      bundlerCache: core.getInput('bundler-cache') === 'true',
+      bundlerVersion: core.getInput('bundler-version') || '',
       verbose: core.getInput('verbose') === 'true',
       exclude: core.getInput('exclude'),
     };
@@ -69,7 +76,15 @@ async function run(): Promise<void> {
     if (rubyCacheHit) {
       await activateRuby(rubyVersion);
     } else {
-      await installRuby(rubyVersion);
+      await installRuby(rubyVersion, inputs.compile);
+    }
+
+    // Configure Bundler path and version
+    await configureBundler(workingDir, inputs.bundlePath);
+
+    const bundlerVersion = inputs.bundlerVersion || await readBundlerVersion(workingDir);
+    if (bundlerVersion) {
+      await installBundler(bundlerVersion);
     }
 
     // Restore bundle cache
@@ -81,6 +96,11 @@ async function run(): Promise<void> {
     );
     const bundleCacheHit = bundleResult === 0;
     core.setOutput('cache-hit', bundleCacheHit.toString());
+
+    // Auto-run bundle install if opted in
+    if (inputs.bundlerCache) {
+      await runBundleInstall(workingDir);
+    }
 
     // Save state for post-job save
     core.saveState('workspace', workspace);

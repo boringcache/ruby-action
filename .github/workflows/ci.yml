@@ -68,24 +68,17 @@ jobs:
           gem 'json'
           EOF
 
-      - name: Setup Ruby
+      - name: Setup Ruby with bundler-cache
         id: ruby
         uses: ./
         with:
           workspace: boringcache/ruby-action-test
           working-directory: test-app
-
-      - name: Bundle install
-        working-directory: test-app
-        run: |
-          bundle config set --local path vendor/bundle
-          bundle install --jobs 4
+          bundler-cache: true
 
       - name: Verify gems installed
         working-directory: test-app
         run: bundle list | grep rake
-
-      # Cache is automatically saved at job end
 
   test-custom-ruby-version:
     name: Test Custom Ruby Version
